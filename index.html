@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS-Boxmodell ausprobieren</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f1f4f8; color: #17243b; font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1120px; margin: auto; padding: clamp(16px, 4vw, 48px); }
+  h1 { font-size: clamp(2rem, 5vw, 3.3rem); line-height: 1.1; margin: 0; letter-spacing: -.045em; }
+  h2 { margin: 0 0 16px; font-size: 1.2rem; }
+  header { margin-bottom: 26px; }
+  header p { margin-bottom: 0; }
+  .layout { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(0, 1.65fr); gap: 18px; align-items: start; }
+  .card { background: white; padding: 20px; border: 1px solid #dce3ed; border-radius: 16px; }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+  legend, label { font-weight: 650; }
+  fieldset label { display: block; font-family: monospace; margin-top: 6px; }
+  .control { margin-top: 15px; }
+  .control div { display: flex; justify-content: space-between; gap: 8px; }
+  .side-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+  .side-values[hidden] { display: none; }
+  .side-values label { font-size: .85rem; }
+  #calculation { padding-left: 20px; font-size: .9rem; }
+  output { font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; margin: 6px 0 0; }
+  input { accent-color: #2453bd; }
+  .border-controls { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-top: 15px; }
+  .border-controls label { display: block; margin-bottom: 5px; }
+  .border-controls select, .border-controls input { height: 36px; border: 1px solid #c7d4e5; border-radius: 6px; background: white; color: inherit; }
+  .border-controls select { width: 100%; padding: 0 8px; font: inherit; }
+  .border-controls input { width: 48px; cursor: pointer; }
+  button { font: inherit; color: #183d8f; background: #edf2ff; border: 1px solid #c7d4f7; border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+  form button { margin-top: 18px; }
+  .stage { overflow: auto; padding: 16px; border: 1px solid #dce3ed; border-radius: 10px; min-height: 230px;
+    background: radial-gradient(#b9c5d6 1px, transparent 1px) 0 0 / 12px 12px, #f7f9fc; }
+  .margin-area { display: flow-root; width: max-content; background: #f6c989; }
+  #box { position: relative; background: #bce3c3; }
+  #content { position: absolute; background: #a9d2fa; }
+  .key { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 0; list-style: none; font-size: .9rem; }
+  .key span { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 3px; background: var(--colour); }
+  dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: .9rem; }
+  dd { margin: 0; font-weight: 650; white-space: nowrap; }
+  #explanation { font-size: .92rem; }
+  pre { background: #17243b; color: #eef4ff; border-radius: 10px; padding: 14px; overflow: auto; margin-bottom: 0; }
+  :focus-visible { outline: 3px solid #2453bd; outline-offset: 3px; }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Das CSS-Boxmodell</h1>
+    <p>Verändere die CSS-Werte und beobachte, welche Teile der Box wachsen oder schrumpfen.</p>
+  </header>
+  <div class="layout">
+    <form class="card" id="settings">
+      <h2>CSS-Einstellungen</h2>
+      <fieldset>
+        <legend><code>box-sizing</code></legend>
+        <label><input type="radio" name="sizing" value="content-box" checked> content-box</label>
+        <label><input type="radio" name="sizing" value="border-box"> border-box</label>
+      </fieldset>
+      <div id="controls"></div>
+      <div class="border-controls">
+        <div>
+          <label for="border-style"><code>border-style</code></label>
+          <select id="border-style" name="border-style">
+            <option value="solid">solid</option>
+            <option value="dashed">dashed</option>
+            <option value="dotted">dotted</option>
+            <option value="double">double</option>
+            <option value="groove">groove</option>
+            <option value="ridge">ridge</option>
+            <option value="inset">inset</option>
+            <option value="outset">outset</option>
+            <option value="none">none</option>
+          </select>
+        </div>
+        <div>
+          <label for="border-color"><code>border-color</code></label>
+          <input type="color" id="border-color" name="border-color" value="#9b7bce">
+        </div>
+      </div>
+      <button type="reset">Zurücksetzen</button>
+    </form>
+    <section class="card" aria-labelledby="preview">
+      <h2 id="preview">Live-Vorschau</h2>
+      <div class="stage" tabindex="0" role="region" aria-label="Scrollbare Boxmodell-Vorschau in Originalgrösse">
+        <div class="margin-area" aria-hidden="true"><div id="box"><div id="content"></div></div></div>
+      </div>
+      <ul class="key">
+        <li><span style="--colour:#a9d2fa"></span>Inhalt</li>
+        <li><span style="--colour:#bce3c3"></span>Padding</li>
+        <li><span id="border-key" style="--colour:#9b7bce"></span>Border</li>
+        <li><span style="--colour:#f6c989"></span>Margin</li>
+      </ul>
+      <dl>
+        <dt>Inhalt</dt><dd id="content-size"></dd>
+        <dt>Box bis zum Rand</dt><dd id="border-size"></dd>
+        <dt>Platzbedarf mit Margin</dt><dd id="margin-size"></dd>
+      </dl>
+      <p id="explanation"></p>
+      <h2>So berechnen sich die Masse</h2>
+      <ul id="calculation"></ul>
+      <p><strong>Ausprobieren:</strong> Sag die Inhaltsbreite für den anderen <code>box-sizing</code>-Wert voraus. Wechsle danach den Modus und überprüfe deine Rechnung.</p>
+      <h2>CSS für die Box</h2>
+      <pre><code id="css-code"></code></pre>
+    </section>
+  </div>
+</main>
+<script>
+  const settings = document.querySelector('#settings');
+  const controls = document.querySelector('#controls');
+  const box = document.querySelector('#box');
+  const content = document.querySelector('#content');
+  const sliders = [
+    { name: 'width', max: 480, initial: 200 },
+    { name: 'height', max: 320, initial: 100 },
+    { name: 'padding', max: 60, initial: 24 },
+    { name: 'border', max: 30, initial: 8 },
+    { name: 'margin', max: 60, initial: 20 }
+  ];
+
+  const sides = ['Oben', 'Rechts', 'Unten', 'Links'];
+  const splitProperties = ['padding', 'border', 'margin'];
+
+  for (const { name, max, initial } of sliders) {
+    const row = document.createElement('div');
+    row.className = 'control';
+    row.innerHTML = `<div><label for="${name}"><code>${name}</code></label>
+      <output for="${name}" id="${name}-value"></output></div>
+      <input type="range" id="${name}" name="${name}" min="0" max="${max}" value="${initial}">`;
+    if (splitProperties.includes(name)) {
+      row.insertAdjacentHTML('beforeend', `
+        <label><input type="checkbox" id="${name}-linked" checked> <code>${name}</code> auf allen Seiten gleich</label>
+        <fieldset class="side-values" id="${name}-sides" hidden>
+          <legend><code>${name}</code> pro Seite</legend>
+          ${sides.map((side, index) => `
+            <label for="${name}-${index}">${side}
+              <output id="${name}-${index}-value" for="${name}-${index}"></output>
+              <input type="range" id="${name}-${index}" min="0" max="${max}" value="${initial}">
+            </label>`).join('')}
+        </fieldset>`);
+    }
+    controls.append(row);
+  }
+
+  function update() {
+    const sizing = settings.elements.sizing.value;
+    const values = {};
+    for (const { name } of sliders) {
+      values[name] = settings.elements[name].valueAsNumber;
+      document.getElementById(name + '-value').value = values[name] + ' px';
+    }
+
+    const sideValues = {};
+    for (const name of splitProperties) {
+      const linked = document.getElementById(name + '-linked').checked;
+      document.getElementById(name + '-sides').hidden = linked;
+      document.getElementById(name).hidden = !linked;
+      document.getElementById(name + '-value').parentElement.style.display = linked ? '' : 'none';
+      sideValues[name] = sides.map((_, index) => {
+        const input = document.getElementById(name + '-' + index);
+        if (linked) input.value = values[name];
+        document.getElementById(input.id + '-value').value = input.value + ' px';
+        return input.valueAsNumber;
+      });
+    }
+    const shorthand = name => {
+      const [top, right, bottom, left] = sideValues[name];
+      const lengths = left !== right ? [top, right, bottom, left]
+        : top !== bottom ? [top, right, bottom] : top !== right ? [top, right] : [top];
+      return lengths.map(value => value + 'px').join(' ');
+    };
+    const { width, height } = values;
+    const [pt, pr, pb, pl] = sideValues.padding;
+    const [mt, mr, mb, ml] = sideValues.margin;
+    const borderStyle = settings.elements['border-style'].value;
+    const borderColor = settings.elements['border-color'].value;
+    document.querySelector('#border-key').style.setProperty('--colour', borderColor);
+
+    const declarations = {
+      'box-sizing': sizing,
+      width: width + 'px',
+      height: height + 'px',
+      padding: shorthand('padding'),
+      'border-width': shorthand('border'),
+      'border-style': borderStyle,
+      'border-color': borderColor,
+      margin: shorthand('margin')
+    };
+    for (const [property, value] of Object.entries(declarations)) {
+      box.style.setProperty(property, value);
+    }
+    // Die farbige Inhaltsfläche beginnt innerhalb des Paddings.
+    content.style.inset = shorthand('padding');
+
+    const borderRect = box.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    const size = (w, h) => w + ' × ' + h + ' px';
+    document.querySelector('#content-size').textContent = size(contentRect.width, contentRect.height);
+    document.querySelector('#border-size').textContent = size(borderRect.width, borderRect.height);
+    document.querySelector('#margin-size').textContent = size(borderRect.width + ml + mr, borderRect.height + mt + mb);
+
+    let explanation = sizing === 'content-box'
+      ? 'width und height bestimmen die Inhaltsgrösse. Padding und Border kommen auf beiden Seiten dazu.'
+      : 'width und height umfassen Inhalt, Padding und Border. Mehr Padding oder Border lässt weniger Platz für den Inhalt.';
+    const computed = getComputedStyle(box);
+    const [bt, br, bb, bl] = ['Top', 'Right', 'Bottom', 'Left'].map(
+      side => parseFloat(computed['border' + side + 'Width'])
+    );
+    const horizontalExtras = pl + pr + bl + br;
+    const verticalExtras = pt + pb + bt + bb;
+    const calculation = document.querySelector('#calculation');
+    calculation.replaceChildren();
+    for (const [axis, declared, start, end, borderStart, borderEnd, inner, outer] of [
+      ['Breite', width, pl, pr, bl, br, contentRect.width, borderRect.width],
+      ['Höhe', height, pt, pb, bt, bb, contentRect.height, borderRect.height]
+    ]) {
+      const item = document.createElement('li');
+      const extras = start + end + borderStart + borderEnd;
+      item.textContent = sizing === 'content-box'
+        ? `${axis} der Box: ${inner} px Inhalt + ${start} px + ${end} px Padding + (${borderStart} px + ${borderEnd} px) Border = ${outer} px`
+        : `${axis} des Inhalts: ${declared} px − (${start} px + ${end} px Padding + (${borderStart} px + ${borderEnd} px) Border) = ${declared - extras} px`
+          + (declared < extras ? ` → ${inner} px Inhalt (Minimum), ${outer} px Box` : '');
+      calculation.append(item);
+    }
+    const footprint = document.createElement('li');
+    footprint.textContent = `Mit Margin: (${ml} + ${borderRect.width} + ${mr}) × (${mt} + ${borderRect.height} + ${mb}) px = ${size(borderRect.width + ml + mr, borderRect.height + mt + mb)}`;
+    calculation.append(footprint);
+    if (sizing === 'border-box' && (width < horizontalExtras || height < verticalExtras)) {
+      explanation = 'Die Inhaltsgrösse kann pro Achse bis auf 0 px sinken. Padding und Border behalten ihre Werte und können die Box über width oder height hinaus vergrössern.';
+    }
+    if (borderStyle === 'none') {
+      explanation += ' Bei border-style: none beträgt die wirksame Rahmenbreite 0 px.';
+    }
+    document.querySelector('#explanation').textContent = explanation + ' Margin liegt in beiden Fällen ausserhalb der Box.';
+    const lines = Object.entries(declarations).map(([property, value]) => '  ' + property + ': ' + value + ';');
+    document.querySelector('#css-code').textContent = ['.box {', ...lines, '}'].join('\n');
+  }
+
+  settings.addEventListener('input', update);
+  settings.addEventListener('reset', () => requestAnimationFrame(update));
+  update();
+</script>
+</body>
+</html>
